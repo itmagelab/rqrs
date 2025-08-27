@@ -34,10 +34,51 @@
 //! }
 //! ```
 
-use crate::Result;
-use serde::Serialize;
+use crate::{Result, api::Rq};
+use serde::{Deserialize, Serialize};
 
 static URL: &str = "https://llm.api.cloud.yandex.net";
+static IAM_URL: &str = "https://iam.api.cloud.yandex.net";
+
+pub struct YCloudML;
+
+#[derive(Deserialize, Serialize)]
+struct Response {
+    #[serde(rename = "iamToken")]
+    iam_token: String,
+    #[serde(rename = "expiresAt")]
+    expires_at: String,
+}
+
+impl YCloudML {
+    pub fn new() -> Self {
+        YCloudML
+    }
+
+    pub async fn oauth<S>(&self, token: S) -> Result<String>
+    where
+        S: Into<String>,
+    {
+        let payload = serde_json::json!({
+            "yandexPassportOauthToken":token.into()
+        });
+        let rs = Rq::from_static(IAM_URL)?
+            .uri("/iam/v1/tokens")
+            .method("POST")?
+            .with_json()?
+            .load_payload(payload)?
+            .apply()
+            .await?;
+        let rs: Response = serde_json::from_value(rs.data)?;
+        Ok(rs.iam_token)
+    }
+}
+
+impl Default for YCloudML {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 pub mod complition;
 pub mod image;
@@ -79,5 +120,18 @@ impl Model {
             Model::Completion { method, .. } => method.clone(),
             Model::Image { method, .. } => method.clone(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[tokio::test]
+    async fn test_oauth() {
+        dotenv::dotenv().ok();
+
+        let token = std::env::var("YC_IAM_OAUTH").unwrap();
+        let _ = YCloudML::new().oauth(&token).await.unwrap();
     }
 }
