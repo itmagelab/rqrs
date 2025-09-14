@@ -85,6 +85,7 @@ impl Default for YCloudML {
 
 pub mod complition;
 pub mod image;
+pub mod speechkit;
 
 #[derive(Serialize, Debug, Clone)]
 pub enum Model {
