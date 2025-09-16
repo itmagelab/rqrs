@@ -87,39 +87,6 @@ pub mod complition;
 pub mod image;
 pub mod speechkit;
 
-#[derive(Serialize, Debug, Clone)]
-pub enum Model {
-    Completion {
-        payload: complition::Payload,
-        uri: String,
-        method: String,
-    },
-    Image {
-        payload: image::Payload,
-        uri: String,
-        method: String,
-    },
-}
-
-impl TryFrom<Model> for serde_json::Value {
-    type Error = anyhow::Error;
-    fn try_from(value: Model) -> Result<Self> {
-        match value {
-            Model::Completion { payload, .. } => Ok(serde_json::to_value(payload)?),
-            Model::Image { payload, .. } => Ok(serde_json::to_value(payload)?),
-        }
-    }
-}
-
-impl Model {
-    fn uri(&self) -> String {
-        match self {
-            Model::Completion { uri, .. } => uri.clone(),
-            Model::Image { uri, .. } => uri.clone(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;

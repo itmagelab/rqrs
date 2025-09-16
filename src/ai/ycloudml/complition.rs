@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Model, URL};
+use super::URL;
 use crate::Result;
 
 pub static URI: &str = "/foundationModels/v1/completion";
@@ -32,16 +32,6 @@ pub struct Alternative {
 pub struct Message {
     role: String,
     text: String,
-}
-
-impl From<Payload> for Model {
-    fn from(value: Payload) -> Self {
-        Model::Completion {
-            payload: value,
-            uri: URI.into(),
-            method: "POST".into(),
-        }
-    }
 }
 
 impl Alternative {
@@ -159,11 +149,9 @@ impl Payload {
     where
         S: Into<String>,
     {
-        let model: Model = self.clone().into();
-        let uri = model.uri();
         let client = reqwest::Client::new();
         let rs: serde_json::Value = client
-            .post(format!("{URL}{uri}"))
+            .post(format!("{URL}{URI}"))
             .header("x-data-logging-enabled", "false")
             .header("X-Session-ID", session_id.into())
             .bearer_auth(jwt.into().trim())

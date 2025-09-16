@@ -24,7 +24,7 @@ use std::{fs::File, io::Write};
 use crate::Result;
 use serde::{Deserialize, Serialize};
 
-use super::{Model, URL};
+use super::URL;
 
 pub static URI: &str = "/foundationModels/v1/imageGenerationAsync";
 
@@ -78,16 +78,6 @@ impl Default for Payload {
                 },
             }),
             messages: Vec::new(),
-        }
-    }
-}
-
-impl From<Payload> for Model {
-    fn from(value: Payload) -> Self {
-        Model::Image {
-            payload: value,
-            uri: URI.into(),
-            method: "POST".into(),
         }
     }
 }
@@ -167,11 +157,9 @@ impl Payload {
     where
         S: Into<String>,
     {
-        let model: Model = self.clone().into();
-        let uri = model.uri();
         let client = reqwest::Client::new();
         let rs: Response = client
-            .post(format!("{URL}{uri}"))
+            .post(format!("{URL}{URI}"))
             .bearer_auth(jwt.into().trim())
             .json(&self)
             .send()
